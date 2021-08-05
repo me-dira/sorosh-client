@@ -1,23 +1,46 @@
-import "reflect-metadata";
-import { injectable } from 'inversify';
+import 'reflect-metadata';
+import {Container, inject, injectable} from 'inversify';
+import {TYPES} from './TYPES';
 
-/**
- * Main namespace of soroush comments
- */
 export namespace Soroush {
+  @injectable()
+  export class SoroushClient implements Client {
+    constructor(@inject(TYPES.token) private readonly token: string,
+        @inject(EventSource) private eventServer: EventSource) {}
 
-    @injectable()
-    export class SoroushClient implements Client {
-        /**
-         * @name Soroush Client object
-         * @author <Mehdi Rahimi mediraworkm@gmail.com>
-         * @param {token} Your soroush bot token
-         * @constructor
-         */
-        constructor(private readonly token: string) { }
+    /**
+     * Just listen on incoming types like 'text', 'image' or ...
+     * @param {SoroushDataTypes} _type acceptable dataTypes
+     * @param {Function} _callback callback to invoke after specified data
+     * incomes.
+     */
+    on(_type: SoroushDataTypes, _callback: ClientMethodCallback): void {}
 
-        on(type: SoroushDataTypes, callback: ClientMethodCallback) { }
-        message(message: string, callback: ClientMethodCallback) { }
-        launch(options: SoroushClientOptions) { }
-    }
+    /**
+     * Message is depricated !
+     * @param {string} _message Your message to listen
+     * @param {ClientMethodCallback} _callback callback fn to invoke when
+     * specified message overcomes to our listener.
+     */
+    message(_message: string, _callback: ClientMethodCallback) {}
+
+    /**
+     * Options for lunching Soroush Client
+     * @param {SoroushClientOptions} _options options
+     */
+    launch(_options: SoroushClientOptions) {}
+  }
 }
+
+const token = process.env.SOROUSH_BOT_TOKEN;
+const SoroushContainer = new Container();
+
+SoroushContainer.bind<Soroush.SoroushClient>(Soroush.SoroushClient)
+    .toSelf().inSingletonScope();
+
+SoroushContainer.bind<string>(TYPES.token).toConstantValue(token);
+
+SoroushContainer.bind<EventSource>(EventSource)
+    .toSelf().inSingletonScope();
+
+export default SoroushContainer;
