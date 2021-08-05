@@ -1,10 +1,12 @@
 import "reflect-metadata";
+import { injectable } from 'inversify';
 
 /**
  * Main namespace of soroush comments
  */
 export namespace Soroush {
 
+    @injectable()
     export class SoroushClient implements Client {
         /**
          * @name Soroush Client object
