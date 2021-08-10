@@ -10,3 +10,13 @@ export declare interface Client {
 
 export declare type ClientMethodCallback = (income: object) => void;
 export declare type SoroushDataTypes = 'text' | 'picture' | 'sticker';
+export declare interface SSEHeaders {
+  accept: string;
+  contentType: string;
+}
+
+export interface SoroushEventData {
+  from: string;
+  type: string;
+  time: number;
+}

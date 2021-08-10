@@ -1,21 +1,47 @@
 /* eslint-disable max-len */
-import {Client, SoroushDataTypes, ClientMethodCallback, SoroushClientOptions} from '../../interfaces';
+import {EventEmitter} from 'stream';
+import EventSource from 'eventsource';
+import {SoroushFilter} from 'src/typing';
 import {Constants} from './../../constants';
+import {Client, SoroushDataTypes, ClientMethodCallback, SoroushClientOptions, SSEHeaders} from '../../interfaces';
+import {fromEvent, Observable, Subject} from 'rxjs';
 
-export class SoroushClient implements Client {
-  constructor(private readonly token: string, private eventSource?: EventSource) {}
+export class SoroushClient extends EventEmitter implements Client {
+  constructor(private readonly token: string) {
+    super();
+    this.prepareEventSource();
+    this.incomeEvent$ = fromEvent(this.eventSource, 'message');
+  }
 
   /**
-   * Generate EventSource to listen to income
-   * soroush messages.
-   * @return {EventSource} Connected to Soroush api server.
-   */
-  private prepareEventSource(): EventSource {
-    const SSEUri = this.generateSSEUri();
-    const eventSource = !this.eventSource ? new EventSource(SSEUri) : this.eventSource;
+   * Event source object that connects to Soroush SSE
+   */ private eventSource?: EventSource;
 
-    this.eventSource = eventSource;
-    return eventSource;
+  /**
+   * This works to pass data to subscribers
+   */ public reactSubject$?: Subject<any>;
+
+  /**
+   * This works to pass data to subscribers
+   */ public incomeEvent$?: Observable<Event>;
+
+  /**
+   * The filters
+   */ private filters: SoroushFilter[];
+
+  /**
+   * Generate EventSource to listen to income soroush messages.
+   * @return {void}
+   */
+  private prepareEventSource(): void {
+    const SSEUri: string = this.generateSSEUri();
+    const headers = this.loadHeaders();
+
+    // Set eventSource
+    this.eventSource = new EventSource(SSEUri, {headers});
+
+    // Create new observable to pass data into other listeners
+    this.reactSubject$ = new Subject();
   }
 
   /**
@@ -29,12 +55,26 @@ export class SoroushClient implements Client {
   }
 
   /**
+   * Load headers from constants and maps theme into object
+   * that we can use.
+   * @return {SSEHeaders} mapped headers object
+   */
+  private loadHeaders(): {headers: SSEHeaders} {
+    return {
+      headers: {
+        accept: Constants.SSE_HEADERS.accept,
+        contentType: Constants.SSE_HEADERS.contentType,
+      },
+    };
+  }
+
+  /**
    * Just listen on incoming types like 'text', 'image' or ...
    * @param {SoroushDataTypes} _type acceptable dataTypes
    * @param {Function} _callback callback to invoke after specified data
    * incomes.
    */
-  on(_type: SoroushDataTypes, _callback: ClientMethodCallback): void {}
+  onType(_type: SoroushDataTypes, _callback: ClientMethodCallback): void {}
 
   /**
    * Listen to a message!
