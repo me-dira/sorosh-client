@@ -1,17 +1,25 @@
 /* eslint-disable max-len */
 import {EventEmitter} from 'stream';
 import EventSource from 'eventsource';
-import {SoroushFilter} from 'src/typing';
-import {Constants} from './../../constants';
+import {Observable, Subject} from 'rxjs';
+
 import {Client, SoroushDataTypes, ClientMethodCallback, SoroushClientOptions, SSEHeaders} from '../../interfaces';
-import {fromEvent, Observable, Subject} from 'rxjs';
+
+// App imports.
+import {Connection, Constants} from '../../';
+import {SoroushEventType, SoroushFilter} from '../../';
 
 export class SoroushClient extends EventEmitter implements Client {
   constructor(private readonly token: string) {
     super();
-    this.prepareEventSource();
-    this.incomeEvent$ = fromEvent(this.eventSource, 'message');
+    this._connection = new Connection({
+      token,
+    });
   }
+
+  /**
+   * Connection Object of Soroush Client.
+   */ private _connection: Connection;
 
   /**
    * Event source object that connects to Soroush SSE
@@ -72,9 +80,18 @@ export class SoroushClient extends EventEmitter implements Client {
    * Just listen on incoming types like 'text', 'image' or ...
    * @param {SoroushDataTypes} _type acceptable dataTypes
    * @param {Function} _callback callback to invoke after specified data
+   * @return {Observable}
    * incomes.
    */
-  onType(_type: SoroushDataTypes, _callback: ClientMethodCallback): void {}
+  onType<T extends SoroushEventType>(_type: SoroushDataTypes, _callback: ClientMethodCallback): Observable<T> {
+    return new Observable((subscriber) => {
+      this.incomeEvent$.subscribe((soroushEv) => {
+        // TODO: generate type.
+        // Generate result object.
+        // Next the object.
+      });
+    });
+  }
 
   /**
    * Listen to a message!
@@ -88,5 +105,14 @@ export class SoroushClient extends EventEmitter implements Client {
    * Options for lunching Soroush Client
    * @param {SoroushClientOptions} _options options
    */
-  launch(_options: SoroushClientOptions) {}
+  launch(_options: SoroushClientOptions) {
+    this._connection.connect().subscribe((sourceEvent) => {
+      console.log('Bot started successfully');
+    });
+  }
+
+  /**
+   * Here we will find the typeof our income data.
+   */
+  private findMessageType() {}
 }
