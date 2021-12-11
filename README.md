@@ -1,2 +1,2 @@
 # sorosh-client
-کلاینت پیام رسان سروش برای استفاده بر بستر جاواسکریپت
+Welcome to soroush-robot client repository.
